@@ -4,7 +4,7 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* Gas Up Design System - Bold, Energetic, Trustworthy */
+/* Ikang Design System - Bold, Energetic, Trustworthy */
 
 @layer base {
   :root {
@@ -38,7 +38,7 @@
 
     --radius: 0.75rem;
 
-    /* Custom Gas Up tokens */
+    /* Custom Ikang tokens */
     --fuel-amber: 32 95% 52%;
     --fuel-amber-glow: 38 100% 60%;
     --fuel-navy: 222 47% 15%;

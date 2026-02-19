@@ -14,16 +14,16 @@ const Footer = () => {
                 <Fuel className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold">
-                Gas<span className="text-primary">Up</span>
+                Ik<span className="text-primary">ang</span>
               </span>
             </a>
             <p className="text-secondary-foreground/70 mb-6">
               Nigeria's leading fuel delivery service. Skip the queue and get fuel delivered to your doorstep.
             </p>
             <div className="space-y-2">
-              <a href="mailto:hello@gasup.ng" className="flex items-center gap-2 text-secondary-foreground/70 hover:text-primary transition-colors">
+              <a href="mailto:hello@ikang.ng" className="flex items-center gap-2 text-secondary-foreground/70 hover:text-primary transition-colors">
                 <Mail className="w-4 h-4" />
-                hello@gasup.ng
+                hello@ikang.ng
               </a>
               <a href="tel:+2349012345678" className="flex items-center gap-2 text-secondary-foreground/70 hover:text-primary transition-colors">
                 <Phone className="w-4 h-4" />
@@ -85,7 +85,7 @@ const Footer = () => {
         <div className="border-t border-secondary-foreground/10 mt-12 pt-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-secondary-foreground/60">
-              © {currentYear} GasUp Nigeria. All rights reserved.
+              © {currentYear} Ikang Nigeria. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
               <a href="#" className="text-sm text-secondary-foreground/60 hover:text-primary transition-colors">

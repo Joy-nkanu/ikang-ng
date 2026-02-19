@@ -39,7 +39,7 @@ const HowItWorks = () => {
             Simple Process
           </span>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-            How <span className="text-gradient">Gas Up</span> Works
+            How <span className="text-gradient">Ikang</span> Works
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Get fuel delivered in 4 easy steps. No queues, no stress, just convenience.
