@@ -2,8 +2,10 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Menu, X, Fuel } from "lucide-react";
 import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
@@ -42,10 +44,10 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
               Sign In
             </Button>
-            <Button variant="default" size="sm">
+            <Button variant="default" size="sm" onClick={() => navigate("/auth")}>
               Order Now
             </Button>
           </div>
@@ -84,10 +86,10 @@ const Header = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={() => { setIsMenuOpen(false); navigate("/auth"); }}>
                   Sign In
                 </Button>
-                <Button variant="default" size="sm">
+                <Button variant="default" size="sm" onClick={() => { setIsMenuOpen(false); navigate("/auth"); }}>
                   Order Now
                 </Button>
               </div>
