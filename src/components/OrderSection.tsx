@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Fuel, Droplets, MapPin, Minus, Plus, Truck, Loader2 } from "lucide-react";
+import { Fuel, Droplets, MapPin, Minus, Plus, Truck, Loader2, UserPlus } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 
 type FuelType = "petrol" | "diesel";
 
@@ -22,7 +23,19 @@ const OrderSection = () => {
   const [selectedStation, setSelectedStation] = useState<number | null>(1);
   const [address, setAddress] = useState("");
   const [placing, setPlacing] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session?.user);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsLoggedIn(!!session?.user);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const selectedStationData = stations.find((s) => s.id === selectedStation);
   const totalPrice = selectedStationData ? selectedStationData.price * quantity : 0;
@@ -40,8 +53,7 @@ const OrderSection = () => {
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      toast({ title: "Please sign in to place an order" });
-      navigate("/auth");
+      setShowAuthPrompt(true);
       return;
     }
 
@@ -237,6 +249,38 @@ const OrderSection = () => {
             </div>
           </motion.div>
         </div>
+
+        {/* Auth Prompt Dialog */}
+        <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-primary" />
+                Create an Account to Checkout
+              </DialogTitle>
+              <DialogDescription>
+                To complete your order of <span className="font-semibold text-foreground">{quantity}L {fuelType === "petrol" ? "Petrol" : "Diesel"}</span> for{" "}
+                <span className="font-semibold text-primary">₦{(totalPrice + deliveryFee).toLocaleString()}</span>, please create an account or sign in. This helps us track your delivery and send updates.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 mt-4">
+              <Button
+                variant="hero"
+                size="lg"
+                onClick={() => {
+                  setShowAuthPrompt(false);
+                  navigate("/auth");
+                }}
+              >
+                <UserPlus className="w-5 h-5" />
+                Create Account / Sign In
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Your order details will be saved. You'll be redirected back after signing in.
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </section>
   );
