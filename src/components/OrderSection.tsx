@@ -23,7 +23,19 @@ const OrderSection = () => {
   const [selectedStation, setSelectedStation] = useState<number | null>(1);
   const [address, setAddress] = useState("");
   const [placing, setPlacing] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session?.user);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsLoggedIn(!!session?.user);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const selectedStationData = stations.find((s) => s.id === selectedStation);
   const totalPrice = selectedStationData ? selectedStationData.price * quantity : 0;
@@ -41,8 +53,7 @@ const OrderSection = () => {
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      toast({ title: "Please sign in to place an order" });
-      navigate("/auth");
+      setShowAuthPrompt(true);
       return;
     }
 
