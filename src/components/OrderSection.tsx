@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Fuel, Droplets, MapPin, Minus, Plus, Truck, Loader2 } from "lucide-react";
+import { Fuel, Droplets, MapPin, Minus, Plus, Truck, Loader2, UserPlus } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 
 type FuelType = "petrol" | "diesel";
 
