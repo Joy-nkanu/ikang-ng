@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Fuel, Droplets, MapPin, Minus, Plus, Truck } from "lucide-react";
+import { Fuel, Droplets, MapPin, Minus, Plus, Truck, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 type FuelType = "petrol" | "diesel";
 
@@ -18,10 +21,51 @@ const OrderSection = () => {
   const [quantity, setQuantity] = useState(50);
   const [selectedStation, setSelectedStation] = useState<number | null>(1);
   const [address, setAddress] = useState("");
+  const [placing, setPlacing] = useState(false);
+  const navigate = useNavigate();
 
   const selectedStationData = stations.find((s) => s.id === selectedStation);
   const totalPrice = selectedStationData ? selectedStationData.price * quantity : 0;
   const deliveryFee = 1500;
+
+  const handlePlaceOrder = async () => {
+    if (!selectedStationData) {
+      toast({ title: "Select a station", variant: "destructive" });
+      return;
+    }
+    if (!address.trim()) {
+      toast({ title: "Enter delivery address", variant: "destructive" });
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Please sign in to place an order" });
+      navigate("/auth");
+      return;
+    }
+
+    setPlacing(true);
+    const { error } = await supabase.from("orders").insert({
+      user_id: session.user.id,
+      fuel_type: fuelType,
+      quantity,
+      station_name: selectedStationData.name,
+      price_per_litre: selectedStationData.price,
+      delivery_fee: deliveryFee,
+      total_price: totalPrice + deliveryFee,
+      delivery_address: address,
+    });
+    setPlacing(false);
+
+    if (error) {
+      toast({ title: "Failed to place order", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Order placed! 🎉", description: "Estimated delivery: 30-45 minutes" });
+      setAddress("");
+      setQuantity(50);
+    }
+  };
 
   return (
     <section id="stations" className="py-20 md:py-32 bg-muted/50">
@@ -55,61 +99,44 @@ const OrderSection = () => {
           >
             {/* Fuel Type Selection */}
             <div className="mb-8">
-              <label className="block text-sm font-semibold text-foreground mb-3">
-                Select Fuel Type
-              </label>
+              <label className="block text-sm font-semibold text-foreground mb-3">Select Fuel Type</label>
               <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={() => setFuelType("petrol")}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                    fuelType === "petrol"
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                >
-                  <Fuel className={`w-8 h-8 mx-auto mb-2 ${fuelType === "petrol" ? "text-primary" : "text-muted-foreground"}`} />
-                  <p className={`font-semibold ${fuelType === "petrol" ? "text-primary" : "text-foreground"}`}>
-                    Petrol (PMS)
-                  </p>
-                  <p className="text-sm text-muted-foreground">₦680 - ₦700/L</p>
-                </button>
-                <button
-                  onClick={() => setFuelType("diesel")}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                    fuelType === "diesel"
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                >
-                  <Droplets className={`w-8 h-8 mx-auto mb-2 ${fuelType === "diesel" ? "text-primary" : "text-muted-foreground"}`} />
-                  <p className={`font-semibold ${fuelType === "diesel" ? "text-primary" : "text-foreground"}`}>
-                    Diesel (AGO)
-                  </p>
-                  <p className="text-sm text-muted-foreground">₦1,100 - ₦1,200/L</p>
-                </button>
+                {(["petrol", "diesel"] as FuelType[]).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setFuelType(type)}
+                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                      fuelType === type ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {type === "petrol" ? (
+                      <Fuel className={`w-8 h-8 mx-auto mb-2 ${fuelType === type ? "text-primary" : "text-muted-foreground"}`} />
+                    ) : (
+                      <Droplets className={`w-8 h-8 mx-auto mb-2 ${fuelType === type ? "text-primary" : "text-muted-foreground"}`} />
+                    )}
+                    <p className={`font-semibold ${fuelType === type ? "text-primary" : "text-foreground"}`}>
+                      {type === "petrol" ? "Petrol (PMS)" : "Diesel (AGO)"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {type === "petrol" ? "₦680 - ₦700/L" : "₦1,100 - ₦1,200/L"}
+                    </p>
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Quantity */}
             <div className="mb-8">
-              <label className="block text-sm font-semibold text-foreground mb-3">
-                Quantity (Litres)
-              </label>
+              <label className="block text-sm font-semibold text-foreground mb-3">Quantity (Litres)</label>
               <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setQuantity(Math.max(10, quantity - 10))}
-                  className="w-12 h-12 rounded-xl border border-border flex items-center justify-center hover:bg-muted transition-colors"
-                >
+                <button onClick={() => setQuantity(Math.max(10, quantity - 10))} className="w-12 h-12 rounded-xl border border-border flex items-center justify-center hover:bg-muted transition-colors">
                   <Minus className="w-5 h-5 text-foreground" />
                 </button>
                 <div className="flex-1 text-center">
                   <span className="text-4xl font-bold text-foreground">{quantity}</span>
                   <span className="text-lg text-muted-foreground ml-2">Litres</span>
                 </div>
-                <button
-                  onClick={() => setQuantity(Math.min(500, quantity + 10))}
-                  className="w-12 h-12 rounded-xl border border-border flex items-center justify-center hover:bg-muted transition-colors"
-                >
+                <button onClick={() => setQuantity(Math.min(500, quantity + 10))} className="w-12 h-12 rounded-xl border border-border flex items-center justify-center hover:bg-muted transition-colors">
                   <Plus className="w-5 h-5 text-foreground" />
                 </button>
               </div>
@@ -119,9 +146,7 @@ const OrderSection = () => {
                     key={preset}
                     onClick={() => setQuantity(preset)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      quantity === preset
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      quantity === preset ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
                     }`}
                   >
                     {preset}L
@@ -132,9 +157,7 @@ const OrderSection = () => {
 
             {/* Delivery Address */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-foreground mb-3">
-                Delivery Address
-              </label>
+              <label className="block text-sm font-semibold text-foreground mb-3">Delivery Address</label>
               <div className="relative">
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -156,11 +179,8 @@ const OrderSection = () => {
             transition={{ duration: 0.6 }}
             className="space-y-6"
           >
-            {/* Nearby Stations */}
             <div className="bg-card rounded-2xl p-6 shadow-card">
-              <h3 className="text-lg font-bold text-foreground mb-4">
-                Nearby Stations
-              </h3>
+              <h3 className="text-lg font-bold text-foreground mb-4">Nearby Stations</h3>
               <div className="space-y-3">
                 {stations.map((station) => (
                   <button
@@ -182,9 +202,7 @@ const OrderSection = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-primary">₦{station.price}/L</p>
-                        {!station.available && (
-                          <span className="text-xs text-destructive">Out of stock</span>
-                        )}
+                        {!station.available && <span className="text-xs text-destructive">Out of stock</span>}
                       </div>
                     </div>
                   </button>
@@ -194,14 +212,10 @@ const OrderSection = () => {
 
             {/* Order Summary */}
             <div className="bg-secondary rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-secondary-foreground mb-4">
-                Order Summary
-              </h3>
+              <h3 className="text-lg font-bold text-secondary-foreground mb-4">Order Summary</h3>
               <div className="space-y-3 text-secondary-foreground">
                 <div className="flex justify-between">
-                  <span className="text-secondary-foreground/70">
-                    {quantity}L × {fuelType === "petrol" ? "Petrol" : "Diesel"}
-                  </span>
+                  <span className="text-secondary-foreground/70">{quantity}L × {fuelType === "petrol" ? "Petrol" : "Diesel"}</span>
                   <span className="font-medium">₦{totalPrice.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
@@ -211,19 +225,15 @@ const OrderSection = () => {
                 <div className="border-t border-secondary-foreground/20 pt-3">
                   <div className="flex justify-between">
                     <span className="font-bold">Total</span>
-                    <span className="text-xl font-bold text-primary">
-                      ₦{(totalPrice + deliveryFee).toLocaleString()}
-                    </span>
+                    <span className="text-xl font-bold text-primary">₦{(totalPrice + deliveryFee).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
-              <Button variant="hero" size="lg" className="w-full mt-6">
-                <Truck className="w-5 h-5" />
-                Place Order
+              <Button variant="hero" size="lg" className="w-full mt-6" onClick={handlePlaceOrder} disabled={placing}>
+                {placing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Truck className="w-5 h-5" />}
+                {placing ? "Placing Order..." : "Place Order"}
               </Button>
-              <p className="text-xs text-center text-secondary-foreground/60 mt-3">
-                Estimated delivery: 30-45 minutes
-              </p>
+              <p className="text-xs text-center text-secondary-foreground/60 mt-3">Estimated delivery: 30-45 minutes</p>
             </div>
           </motion.div>
         </div>
