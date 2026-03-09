@@ -249,6 +249,38 @@ const OrderSection = () => {
             </div>
           </motion.div>
         </div>
+
+        {/* Auth Prompt Dialog */}
+        <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-primary" />
+                Create an Account to Checkout
+              </DialogTitle>
+              <DialogDescription>
+                To complete your order of <span className="font-semibold text-foreground">{quantity}L {fuelType === "petrol" ? "Petrol" : "Diesel"}</span> for{" "}
+                <span className="font-semibold text-primary">₦{(totalPrice + deliveryFee).toLocaleString()}</span>, please create an account or sign in. This helps us track your delivery and send updates.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 mt-4">
+              <Button
+                variant="hero"
+                size="lg"
+                onClick={() => {
+                  setShowAuthPrompt(false);
+                  navigate("/auth");
+                }}
+              >
+                <UserPlus className="w-5 h-5" />
+                Create Account / Sign In
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Your order details will be saved. You'll be redirected back after signing in.
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </section>
   );
